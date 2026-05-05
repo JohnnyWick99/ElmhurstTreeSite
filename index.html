@@ -1,591 +1,3 @@
-
-Claude finished the response
-You said: I'm working on my Capstone project.
-
-Pasted text.txt Document Here is my capstone project the other chat i had was the wrong thing Alright—this is actually a solid capstone direction. The earlier confusion makes sense, but what you have now is way clearer and definitely meets a senior-level project expectation. Let me b
-
-pasted
-
-
-Quigleypuff — 4/8/26, 11:18 AMokQuigleypuff — 4/8/26, 1:11 PMWe need access to their tree database bc make a new database for the 1000 treesAnd also the stack we should useDawnDawn [HANK], — 4/8/26, 5:30 PMA lot of information from Jensen but too make a longstory short I'll summarize, also Jensen s
-
-pasted
-
-I'm working on my Capstone project. Here is Chat GPT's interpritation of my assisnged task and how i should go about it, what do you think?
-
-The second pasted doc, is my teams chat.
-
-Treewebsite
-http://3.16.128.43/
-Github
-https://github.com/quigleypuf/ElmhurstTreeSite/tree/main
-
-Apr 29
-Claude responded: ChatGPT's advice is solid overall, but there are a few things worth flagging given what I can see about your actual project.
-
-Searched the web
-Searched the web
-ChatGPT's advice is solid overall, but there are a few things worth flagging given what I can see about your actual project.
-
-What ChatGPT got right:
-
-Your deliverable is the search/landing page experience, not just a dumb input box
-You should validate input (empty field, invalid ID) and show real feedback
-Connecting it to real tree data is what makes it meaningful
-The tree.html?id=X redirect pattern is a clean, correct approach
-Where I'd push back or add nuance:
-
-The advice to use TREES[input] as an object lookup assumes your data is already structured as a key-value object in trees.js, which may or may not be true. Before writing any code, you should peek at what trees.js actually exports — if it's an array, you'd need .find() instead.
-
-Also, ChatGPT suggested searching by tree ID only, but looking at your chat, your teammate Yasuke was assigned the search bar task and you (Quigleypuff) already built the full site. So the more important question is: what's actually missing or broken right now?
-
-From the live site, it looks like JavaScript may not be serving correctly — you even mentioned that yourself on 4/27. That's a higher priority than building new features.
-
-My honest take on your situation:
-
-You're past the "what should I build" phase. Your team's site is live with 750 trees and QR codes on each tree page. The most valuable things you could do right now before Thursday's meeting are:
-
-Fix the JS serving issue so the search actually works on the live AWS site
-Make sure the search handles name searches, not just IDs — that's way more user-friendly and would impress Dr. Bradshaw
-Clean up the UI so it looks presentable for a demo
-What does the current search do when you test it? And do you know if the issue is the JS file not loading, or something else?
-
-You said: sorry I'm Yasuke in the chat
-sorry I'm Yasuke in the chat
-
-Apr 29
-Claude responded: No worries!
-No worries! So you're the one assigned to the search bar landing page.
-
-Looking at what's already built on the site, your job is basically to make the homepage search experience actually work well. Here's my honest read on where to focus:
-
-What you should actually build:
-
-The core flow is simple — user types a tree ID (or name), hits search, gets redirected to that tree's page. ChatGPT's code snippet is a fine starting point, but the key question is how trees.js is structured on the existing site, since that determines how you query the data.
-
-A couple things that would make your piece stand out:
-
-Search by name, not just ID — nobody walking up to a tree is going to know its ID number. Letting someone type "Oak" and get results is way more useful and shows you thought about real users
-Basic error handling — "Tree not found" if the ID doesn't exist, "Please enter something" if the field is empty
-What I'd suggest you do right now:
-
-Pull down the repo from GitHub
-Open trees.js and see how the data is structured (array vs object)
-Build your search logic around that
-If you want, share what trees.js looks like and I can write you the exact search function that plugs into the existing site — no guessing involved. That'd be faster than working from ChatGPT's generic template.
-
-What does your setup look like — have you pulled the repo yet?
-
-
-trees.js
-js
-
-Apr 29
-Claude responded: Perfect — it's a key-value object (TREES["1"], TREES["2"], etc.
-
-Check trees.js structure
-Check trees.js structure
-Perfect — it's a key-value object (TREES["1"], TREES["2"], etc.), which is actually the best structure for this. ChatGPT's TREES[input] lookup will work exactly right.
-
-Here's clean, complete code for your search landing page that handles both ID search and name search, plus proper error handling:
-
-html
-<!-- Add this to your index.html -->
-
-<input type="text" id="treeSearch" placeholder="Enter Tree ID or name (e.g. 25 or Oak)">
-<button onclick="searchTree()">Search</button>
-<div id="searchResults"></div>
-
-<script src="trees.js"></script>
-<script>
-  function searchTree() {
-    const input = document.getElementById("treeSearch").value.trim();
-    const resultsDiv = document.getElementById("searchResults");
-
-    if (!input) {
-      resultsDiv.innerHTML = "<p>Please enter a tree ID or name.</p>";
-      return;
-    }
-
-    // First try exact ID lookup (fast)
-    if (TREES[input]) {
-      window.location.href = `tree.html?id=${input}`;
-      return;
-    }
-
-    // Otherwise search by name (case-insensitive)
-    const matches = Object.values(TREES).filter(tree =>
-      tree.tree_name.toLowerCase().includes(input.toLowerCase()) ||
-      tree.scientific_name.toLowerCase().includes(input.toLowerCase())
-    );
-
-    if (matches.length === 1) {
-      // Only one match — go straight to it
-      window.location.href = `tree.html?id=${matches[0].tree_id}`;
-    } else if (matches.length > 1) {
-      // Multiple matches — show a list
-      resultsDiv.innerHTML = `
-        <p>${matches.length} trees found:</p>
-        <ul>
-          ${matches.map(t => `
-            <li>
-              <a href="tree.html?id=${t.tree_id}">
-                #${t.tree_id} — ${t.tree_name} (${t.scientific_name})
-              </a>
-            </li>
-          `).join("")}
-        </ul>
-      `;
-    } else {
-      resultsDiv.innerHTML = "<p>Tree not found. Try a different ID or name.</p>";
-    }
-  }
-
-  // Also allow hitting Enter to search
-  document.getElementById("treeSearch").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") searchTree();
-  });
-</script>
-What this does that ChatGPT's version doesn't:
-
-Searches by common name or scientific name, not just ID
-If there are multiple matches (e.g. "Oak" returns many trees), it shows a list of results instead of just failing
-If there's exactly one match, it goes straight to that tree
-Enter key works, not just the button
-This plugs directly into your existing trees.js and tree.html with no changes needed to those files. Want me to look at your current index.html so I can show you exactly where to drop this in?
-
-You said: Sure look at HTMl.
-
-index.html
-52 lines
-
-html
-
-Sure look at HTMl.index
-
-Apr 29
-Claude responded: Okay, the existing code is actually clean and well-written.
-Okay, the existing code is actually clean and well-written. The main thing missing is name search — right now it only accepts numeric IDs and rejects anything else. Here's the updated index.html with name/scientific name search added:
-
-
-Created a file, read a file
-Created a file, read a file
-Here's what changed from the original and why:
-
-Removed the inputmode="numeric" and pattern="[0-9]*" attributes — those were blocking any text input like "Oak" from even being typed on mobile.
-
-Kept the exact ID lookup logic since it was already correct — it still works the same way for numeric searches.
-
-Added the name fallback — if the input isn't a valid numeric ID, it searches tree_name and scientific_name across all 750 trees.
-
-Added the results div — shows a list when multiple trees match (e.g. typing "Oak" will return all oak varieties), goes straight to the page if only one matches.
-
-You'll also want to add a couple styles to your styles.css for .sci-name (probably gray/italic) and .no-results (probably red or muted). Want me to suggest those too?
-
-
-Index
-Code · HTML 
-You said: sure
-sure
-
-Apr 29
-Claude responded: Can you upload your styles.
-Can you upload your styles.css file? That way I can match the existing style instead of guessing at your color scheme and fonts.
-
-
-styles.css
-205 lines
-
-css
-
-Apr 29
-Claude responded: Good news — .
-Good news — .sci-name is already defined in your CSS (italic). You just need a few small additions for the search results list and the no-results message. Here's exactly what to append to the bottom of your styles.css:
-
-
-Viewed a file, ran a command, read a file
-Viewed a file, ran a command, read a file
-Both files are ready. Here's what the new styles do, staying consistent with your existing design:
-
-Results list — matches the same border/radius style as the rest of the site, with hover highlighting on each row
-Scientific name — already italic from the existing .sci-name rule, just made slightly smaller and muted in the results list
-"No results" message — uses the same red (
-#dc2626) as the existing invalid input border, so it feels intentional
-Just replace both files in your repo with these and it should drop right in with no clashes. Let me know if you want anything tweaked before Thursday's meeting.
-
-
-Styles
-Code · CSS 
-
-Index
-Code · HTML 
-You said: Keep these here im going to review them, later today.
-Keep these here im going to review them, later today.
-
-Apr 29
-Claude responded: Sounds good, they'll be here when you're ready.
-Sounds good, they'll be here when you're ready. Good luck Thursday!
-
-You said: http://18.
-http://18.223.16.129/
-
-Here is the github
-
-5:19 PM
-Claude responded: I can see the URL but you didn't include the GitHub link — it looks like it didn't come through.
-I can see the URL but you didn't include the GitHub link — it looks like it didn't come through. Can you paste it again?
-
-Also, do you want me to check out the live site in the meantime?
-
-You said: https://github.
-https://github.com/quigleypuf/ElmhurstTreeSite
-
-5:19 PM
-Claude responded: The live site is up and looking more polished than the last version — it now has a title "Elmhurst University Trees" and even an "All trees" table below the se…
-
-Searched the web
-Searched the web
-The live site is up and looking more polished than the last version — it now has a title "Elmhurst University Trees" and even an "All trees" table below the search. The table seems to be trying to load dynamically though ("Loading trees…"), so JavaScript may still have a serving issue on that AWS instance.
-
-I can't directly pull the GitHub files, but based on what I can see, a couple things worth checking before Thursday:
-
-Likely issues to investigate:
-
-The tree table says "Loading trees…" — the JS file (trees.js) may not be loading correctly on the server, which would also break search
-This is probably an AWS/nginx config issue where .js files aren't being served with the right MIME type
-Quick fix to try on the server: If you have SSH access to the EC2 instance, check if nginx or Apache is configured to serve .js files. A common culprit is a missing MIME type config.
-
-For your part specifically — if you drop in the updated index.html and styles.css from earlier, the name search will work locally even if the server JS issue isn't fixed yet. You can demo it locally as a fallback for Thursday.
-
-Do you have SSH access to the EC2, or is that Quigleypuff's territory?
-
-
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1"> <title>Elmhurst University Trees</title> <link rel="stylesheet" href="styles.css"> </head> <body class="home"> <h1>Elmhurst University Trees</h1>
-
-pasted
-
-
-:root { --fg: #1f2937; --muted: #6b7280; --border: #e5e7eb; --bg: #ffffff; --accent: #374151; --accent-hover: #111827; } * { box-sizing: border-box; } html, body { margin: 0; padding: 0; color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI"
-
-pasted
-
-5:20 PM
-Claude responded: Okay this is a significant upgrade from what I saw before — the site has gotten much more sophisticated.
-Okay this is a significant upgrade from what I saw before — the site has gotten much more sophisticated. A few important things I notice:
-
-The data layer changed. It's no longer using trees.js with a TREES object — it's now using db.js with a TreeDB object that has .hasTree() and .listTrees() methods. This looks like it's probably SQLite running in the browser via something like sql.js. That's why the table shows "Loading trees…" — db.js likely isn't loading correctly on the server.
-
-This changes what you need to do for your search update. The name search logic needs to call TreeDB instead of querying TREES directly. You'd need something like:
-
-javascript
-// Instead of filtering TREES object, call the database
-TreeDB.listTrees().then(function(trees) {
-  var matches = trees.filter(function(t) {
-    return t.tree_name.toLowerCase().includes(query) ||
-           t.scientific_name.toLowerCase().includes(query);
-  });
-  // then show results...
-});
-Before I rewrite the search function — can you share db.js from the repo? I need to see exactly what methods TreeDB exposes so I write something that actually works with it rather than guessing. That's the key file now.
-
-Also, do you know if the db.js loading issue on the server has been fixed, or is that still broken?
-
-You said: // db.
-// db.js — loads trees.db with sql.js (a WebAssembly build of SQLite)
-// and exposes a small async API for the rest of the site.
-//
-// Note: because this fetches a local file, the site must be served over
-// http(s) (e.g. python3 -m http.server). Opening the HTML directly via
-// file:// will fail to load the database in most browsers.
-(function (global) {
-  var SQL_JS_VERSION = '1.10.3';
-  var SQL_JS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/' + SQL_JS_VERSION + '/';
-  var dbPromise = null;
-  var sqlJsScriptPromise = null;
-  function loadSqlJsScript() {
-    if (sqlJsScriptPromise) return sqlJsScriptPromise;
-    sqlJsScriptPromise = new Promise(function (resolve, reject) {
-      if (typeof initSqlJs === 'function') {
-        resolve();
-        return;
-      }
-      var s = document.createElement('script');
-      s.src = SQL_JS_BASE + 'sql-wasm.js';
-      s.onload = function () { resolve(); };
-      s.onerror = function () { reject(new Error('Failed to load sql.js')); };
-      document.head.appendChild(s);
-    });
-    return sqlJsScriptPromise;
-  }
-  function loadDb() {
-    if (dbPromise) return dbPromise;
-    dbPromise = loadSqlJsScript().then(function () {
-      var sqlPromise = initSqlJs({
-        locateFile: function (file) { return SQL_JS_BASE + file; }
-      });
-      var dataPromise = fetch('trees.db').then(function (res) {
-        if (!res.ok) throw new Error('Failed to fetch trees.db: ' + res.status);
-        return res.arrayBuffer();
-      });
-      return Promise.all([sqlPromise, dataPromise]).then(function (results) {
-        var SQL = results[0];
-        var buf = results[1];
-        return new SQL.Database(new Uint8Array(buf));
-      });
-    });
-    return dbPromise;
-  }
-  // Convert a sql.js result row to a plain object whose values are strings
-  // (matching the shape the existing render code expects). NULLs become "".
-  function rowToObject(stmt) {
-    var cols = stmt.getColumnNames();
-    var values = stmt.get();
-    var obj = {};
-    for (var i = 0; i < cols.length; i++) {
-      var v = values[i];
-      obj[cols[i]] = (v === null || v === undefined) ? '' : String(v);
-    }
-    return obj;
-  }
-  function parseId(id) {
-    var n = parseInt(String(id).replace(/^0+/, '') || '0', 10);
-    return isNaN(n) ? null : n;
-  }
-  var TreeDB = {
-    getTree: function (id) {
-      var n = parseId(id);
-      if (n === null) return Promise.resolve(null);
-      return loadDb().then(function (db) {
-        var stmt = db.prepare('SELECT * FROM trees WHERE tree_id = ?');
-        stmt.bind([n]);
-        var result = null;
-        if (stmt.step()) {
-          result = rowToObject(stmt);
-        }
-        stmt.free();
-        return result;
-      });
-    },
-    hasTree: function (id) {
-      var n = parseId(id);
-      if (n === null) return Promise.resolve(false);
-      return loadDb().then(function (db) {
-        var stmt = db.prepare('SELECT 1 FROM trees WHERE tree_id = ?');
-        stmt.bind([n]);
-        var exists = stmt.step();
-        stmt.free();
-        return exists;
-      });
-    },
-    // Return every tree ordered by tree_id, with just the columns the
-    // homepage list needs.
-    listTrees: function () {
-      return loadDb().then(function (db) {
-        var stmt = db.prepare(
-          'SELECT tree_id, tree_name, dedication_type, age_class ' +
-          'FROM trees ORDER BY tree_id'
-        );
-        var rows = [];
-        while (stmt.step()) {
-          rows.push(rowToObject(stmt));
-        }
-        stmt.free();
-        return rows;
-      });
-    }
-  };
-  global.TreeDB = TreeDB;
-})(window);
-
-Show more
-5:21 PM
-Claude responded: Now I have everything I need.
-Now I have everything I need. The key thing is TreeDB doesn't have a name search method built in, so I need to add one that queries SQLite directly. Here's your updated index.html with proper name search wired into TreeDB:
-
-
-Created a file, ran a command
-Created a file, ran a command
-Now I also need to update styles.css since this version has a different stylesheet than the one I added the results styles to earlier:
-
-
-Ran a command, read a file
-Ran a command, read a file
-Both files are ready. Here's what changed from the current live version:
-
-Search input — removed inputmode="numeric" and pattern="[0-9]*" so text names can actually be typed, especially on mobile.
-
-Search logic — numeric input still goes through TreeDB.hasTree() exactly like before, so that path is unchanged. Text input calls TreeDB.listTrees() and filters by tree_name and scientific_name client-side.
-
-Results display — single match navigates directly, multiple matches show a styled list, no match shows the red error message.
-
-All-trees table — completely untouched from the current version.
-
-One thing worth noting: listTrees() only selects tree_id, tree_name, dedication_type, age_class — it doesn't include scientific_name. The name search will still work on tree_name, but scientific name search won't unless db.js is updated to include that column. That's a one-line change in db.js if you want it — just let me know.
-
-
-Index
-Code · HTML 
-
-Styles
-Code · CSS 
-You said: are these changes needed for the project to be made more efficient?
-are these changes needed for the project to be made more efficient?
-
-5:23 PM
-Claude responded: Honestly, no — not for the capstone.
-Honestly, no — not for the capstone. Here's the real breakdown:
-
-What the project actually needs to succeed Thursday:
-
-The site loads and works (the db.js/trees.db loading issue on AWS is the real blocker)
-You can search by ID and get to a tree page
-It looks presentable for Dr. Bradshaw
-What my changes add:
-
-Search by name instead of just ID
-Better error messages
-A results list when multiple trees match
-These are nice-to-haves, not requirements. The existing index.html is already well-written and handles the core use case fine.
-
-My honest recommendation for you right now:
-
-Don't touch the search code at all until the DB loading issue is fixed. If trees.db isn't loading on the server, none of the search works anyway — and that's not your problem to fix, that's on whoever manages the AWS instance (sounds like Quigleypuff).
-
-What you should actually focus on for Thursday:
-
-Make sure you can explain what the search page does and how it connects to the rest of the system
-Be ready to demo it — even locally on your laptop if the server is still broken
-Know your piece: "I worked on the search functionality that lets users find trees by ID, which validates input against the SQLite database and redirects to the tree detail page"
-That's a solid, honest contribution. The name search upgrade is something you could mention as a future improvement during the presentation, which actually sounds good.
-
-You said: how to upload the chaneges for the tree search so that i can search by name
-how to upload the chaneges for the tree search so that i can search by name
-
-5:24 PM
-Claude responded: Since the repo is on GitHub, here's the simplest way:
-Since the repo is on GitHub, here's the simplest way:
-
-Option 1 — GitHub website (easiest, no terminal needed):
-
-Go to https://github.com/quigleypuf/ElmhurstTreeSite
-Click on index.html
-Click the pencil icon (Edit) in the top right
-Select all the text and delete it
-Paste in the contents of the new index.html from the file I gave you
-Scroll down, click "Commit changes"
-Repeat for styles.css
-Option 2 — GitHub Desktop (if you have it installed):
-
-Pull the latest version of the repo
-Find the repo folder on your computer
-Replace index.html and styles.css with the files I gave you
-Open GitHub Desktop, you'll see the changes listed
-Add a commit message like "Add name search to homepage"
-Click Commit then Push
-Then the AWS server needs to pull the update. That part requires SSH access to the EC2 instance — that's Quigleypuff's territory. He'd just run:
-
-bash
-git pull
-in the site directory on the server.
-
-Do you have GitHub Desktop installed, or would the website approach be easier for you?
-
-You said: website would be easier, also if i push a commit to the file will it just erase it, or will the owner of the github be notified that a change was pushed?
-website would be easier, also if i push a commit to the file will it just erase it, or will the owner of the github be notified that a change was pushed?
-
-5:26 PM
-Claude responded: The owner (Quigleypuff) will not get a notification by default — GitHub doesn't send emails for every commit unless they've specifically set that up.
-The owner (Quigleypuff) will not get a notification by default — GitHub doesn't send emails for every commit unless they've specifically set that up.
-
-However, a couple things to know:
-
-If you have write access to the repo:
-
-You can edit and commit directly
-The change just shows up in the commit history
-Quigleypuff would see it next time he looks at the repo or pulls to the server
-It will replace the file content with whatever you paste in — so make sure you're pasting the full correct file
-If you don't have write access:
-
-GitHub will ask you to "fork" the repo instead
-That creates your own copy, which doesn't affect the live site
-You'd then need to open a "Pull Request" for Quigleypuff to approve and merge
-My suggestion before you do anything: Just message Quigleypuff on Discord and say you're pushing a change to index.html and styles.css for the name search feature. That way he knows to pull it to the server when he's ready, and nothing catches him off guard.
-
-Want to try opening index.html on GitHub now and see if the edit button is available to you? That'll tell you right away whether you have write access.
-
-You said: i can fork this repository
-i can fork this repository
-
-5:29 PM
-Claude responded: That means you don't have write access — you'd need Quigleypuff to either:
-That means you don't have write access — you'd need Quigleypuff to either:
-
-Add you as a collaborator (easiest) — he goes to the repo → Settings → Collaborators → Add your GitHub username. Then you'd have direct write access and can commit straight to the repo.
-You fork it, make the changes, then open a Pull Request — he'd review and merge it. More steps but works without him changing any settings.
-Easiest path for your situation: Just message Quigleypuff on Discord and say something like:
-
-"Can you add me as a collaborator on the ElmhurstTreeSite repo so I can push the name search changes?"
-
-Takes him about 30 seconds to do. Once he adds you, you can edit files directly on the GitHub website no problem.
-
-What's your GitHub username so you have it ready to send him?
-
-You said: ill fork it
-ill fork it
-
-5:29 PM
-Claude responded: Good call.
-Good call. Here's exactly what to do:
-
-1. Fork the repo
-
-Go to https://github.com/quigleypuf/ElmhurstTreeSite
-Click Fork in the top right
-It creates a copy under your own account
-2. Edit index.html in your fork
-
-Click on index.html
-Click the pencil icon to edit
-Select all, delete, paste in the new index.html I gave you
-Scroll down, click Commit changes
-3. Edit styles.css in your fork
-
-Same process — replace with the updated styles.css
-4. Open a Pull Request
-
-GitHub will show a banner saying your fork is ahead of the original
-Click Contribute → Open Pull Request
-Add a short description like "Added name search to homepage"
-Submit it
-Then just ping Quigleypuff on Discord and tell him there's a pull request waiting for him to merge. Once he merges it, he just needs to git pull on the AWS server and the live site will have name search.
-
-Let me know if you hit any snags along the way!
-
-You said: pull up both files for me again please so that i can paste them in
-pull up both files for me again please so that i can paste them in
-
-5:30 PM
-Claude responded: There they are — index.
-
-Presented 2 files
-Presented 2 files
-There they are — index.html first, then styles.css. Copy the full contents of each one and paste them into the respective files in your fork. Let me know if anything looks off!
-
-
-Index
-Code · HTML 
-
-Styles
-Code · CSS 
-
-
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-Index · HTML
-Copy
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -596,7 +8,7 @@ Copy
 </head>
 <body class="home">
   <h1>Elmhurst University Trees</h1>
- 
+
   <form id="search-form" class="search-form" autocomplete="off">
     <input
       id="tree-id"
@@ -607,9 +19,9 @@ Copy
     >
     <button type="submit">Search</button>
   </form>
- 
+
   <div id="search-results"></div>
- 
+
   <section class="tree-list-section" aria-labelledby="tree-list-heading">
     <h2 id="tree-list-heading">All trees</h2>
     <table class="tree-list" id="tree-list">
@@ -628,7 +40,7 @@ Copy
       </tbody>
     </table>
   </section>
- 
+
   <script src="db.js"></script>
   <script>
     (function () {
@@ -641,31 +53,29 @@ Copy
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;');
       }
- 
+
       function displayValue(v) {
         if (v === null || v === undefined) return '—';
         var s = String(v).trim();
         if (s === '' || s.toUpperCase() === 'N/A') return '—';
         return s;
       }
- 
-      // ── Search form ──────────────────────────────────────────────────────
+
       var form = document.getElementById('search-form');
       var input = document.getElementById('tree-id');
       var resultsDiv = document.getElementById('search-results');
- 
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var raw = input.value.trim();
         resultsDiv.innerHTML = '';
         input.classList.remove('invalid');
- 
+
         if (!raw) {
           input.classList.add('invalid');
           return;
         }
- 
-        // 1. Try exact numeric ID lookup first
+
         var id = raw.replace(/^0+/, '') || raw;
         if (/^[0-9]+$/.test(id)) {
           TreeDB.hasTree(id).then(function (exists) {
@@ -680,8 +90,7 @@ Copy
           });
           return;
         }
- 
-        // 2. Name / scientific name search using the full tree list
+
         TreeDB.listTrees().then(function (trees) {
           var query = raw.toLowerCase();
           var matches = trees.filter(function (t) {
@@ -690,7 +99,7 @@ Copy
               (t.scientific_name && t.scientific_name.toLowerCase().includes(query))
             );
           });
- 
+
           if (matches.length === 0) {
             input.classList.add('invalid');
             resultsDiv.innerHTML = '<p class="no-results">No trees found. Try a different ID or name.</p>';
@@ -716,22 +125,21 @@ Copy
           resultsDiv.innerHTML = '<p class="no-results">Search failed. Please try again.</p>';
         });
       });
- 
+
       input.addEventListener('input', function () {
         input.classList.remove('invalid');
         resultsDiv.innerHTML = '';
       });
- 
-      // ── All-trees table ──────────────────────────────────────────────────
+
       var tbody = document.querySelector('#tree-list tbody');
- 
+
       TreeDB.listTrees().then(function (trees) {
         if (!trees || !trees.length) {
           tbody.innerHTML =
             '<tr class="tree-list-status"><td colspan="4">No trees found.</td></tr>';
           return;
         }
- 
+
         var html = '';
         for (var i = 0; i < trees.length; i++) {
           var t = trees[i];
@@ -746,7 +154,7 @@ Copy
             '</tr>';
         }
         tbody.innerHTML = html;
- 
+
         tbody.addEventListener('click', function (e) {
           if (e.target.closest('a')) return;
           var row = e.target.closest('tr.tree-row');
@@ -754,7 +162,7 @@ Copy
             window.location.href = row.dataset.href;
           }
         });
- 
+
         tbody.addEventListener('keydown', function (e) {
           if (e.key !== 'Enter') return;
           var row = e.target.closest('tr.tree-row');
@@ -770,4 +178,3 @@ Copy
   </script>
 </body>
 </html>
- 
