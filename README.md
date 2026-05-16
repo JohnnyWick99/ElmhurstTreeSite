@@ -14,7 +14,15 @@ To make changes and view website on local machine:
 
 Could be added:
 -Make "Elmhurst University Trees" title look better
--Password protected page for adding new trees to the database
+
+-Page for adding new trees to the database with password
+
 -Support for mobile version of the site
+
 -Replace the QR codes at the bottom with a link to a new page thats a more printable version of tree info and QR code
+
 -Add Leaflet map to top of index page with markers for every tree
+
+-Add links to each Leaflet marker
+
+-Add quickwiki facts for each different type of tree
