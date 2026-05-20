@@ -18,8 +18,6 @@ html, body {
 }
 
 body {
-  /* Full-bleed photo background that stretches to cover the viewport
-     and stays put while the page scrolls. */
   background:
     var(--bg) url('BackgroundImage.jpeg') center center / cover no-repeat fixed;
   min-height: 100vh;
@@ -29,7 +27,6 @@ body {
   max-width: 720px;
   margin: 48px auto 64px;
   padding: 32px 32px 48px;
-  /* Translucent white card so content remains readable over the photo. */
   background: rgba(255, 255, 255, 0.92);
   border-radius: 12px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
@@ -49,7 +46,6 @@ body {
   font-weight: 600;
   margin: 0 0 28px;
   letter-spacing: -0.02em;
-  /* Subtle halo so the title stays legible on any background tone. */
   text-shadow: 0 1px 3px rgba(255, 255, 255, 0.7);
 }
 
@@ -185,7 +181,6 @@ table.tree-list tr.tree-list-status td {
 
 .back-link:hover { color: var(--accent); }
 
-/* Tree photo banner at the top of the tree detail page */
 .tree-photo {
   margin: 0 0 24px;
   border-radius: 8px;
@@ -285,8 +280,6 @@ table.info tr:last-child td {
   height: 360px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  /* Leaflet drops a high z-index on its panes which can sit on top of
-     other UI; clipping rounded corners requires overflow:hidden. */
   overflow: hidden;
 }
 
@@ -322,12 +315,11 @@ table.info tr:last-child td {
   color: var(--muted);
 }
 
-
 /* Search results list */
 #search-results {
   width: 100%;
-  max-width: 420px;
-  margin-top: 12px;
+  max-width: 720px;
+  margin: 12px auto 0;
   text-align: left;
 }
 
@@ -341,11 +333,11 @@ table.info tr:last-child td {
 #search-results ul {
   list-style: none;
   margin: 0;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  padding: 24px 28px 28px;
+  border-radius: 12px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
 }
 
 #search-results li {
@@ -358,12 +350,12 @@ table.info tr:last-child td {
 
 #search-results li a {
   display: block;
-  padding: 10px 14px;
+  padding: 10px 12px;
   text-decoration: none;
-  color: #1f2937;
+  color: var(--fg);
   font-size: 0.95rem;
+  font-weight: 500;
   transition: background 0.15s;
-  background: white;
 }
 
 #search-results li a:hover {
@@ -374,6 +366,7 @@ table.info tr:last-child td {
   color: var(--muted);
   font-size: 0.88rem;
   font-style: italic;
+  font-weight: 400;
 }
 
 .no-results {
