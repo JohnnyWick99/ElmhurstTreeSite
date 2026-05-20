@@ -13,14 +13,14 @@
     <input
       id="tree-id"
       type="text"
-      inputmode="numeric"
-      pattern="[0-9]*"
-      placeholder="Enter a tree ID (1 - 970)"
-      aria-label="Tree ID"
+      placeholder="Search by ID or name (e.g. 25 or Oak)"
+      aria-label="Tree search"
       required
     >
     <button type="submit">Search</button>
   </form>
+
+  <div id="search-results"></div>
 
   <section class="tree-list-section" aria-labelledby="tree-list-heading">
     <h2 id="tree-list-heading">All trees</h2>
@@ -55,44 +55,86 @@
       }
 
       function displayValue(v) {
-        // Treat blanks and "N/A" as no value; show an em dash.
         if (v === null || v === undefined) return '—';
         var s = String(v).trim();
         if (s === '' || s.toUpperCase() === 'N/A') return '—';
         return s;
       }
 
-      // Search form
+      // ── Search form ──────────────────────────────────────────────────────
       var form = document.getElementById('search-form');
       var input = document.getElementById('tree-id');
+      var resultsDiv = document.getElementById('search-results');
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var raw = input.value.trim();
-        // Strip leading zeros / non-digits
-        var id = raw.replace(/^0+/, '') || raw;
-        if (!/^[0-9]+$/.test(id)) {
+        resultsDiv.innerHTML = '';
+        input.classList.remove('invalid');
+
+        if (!raw) {
           input.classList.add('invalid');
           return;
         }
-        // Confirm the ID exists in the SQLite database before navigating.
-        TreeDB.hasTree(id).then(function (exists) {
-          if (!exists) {
+
+        // 1. Try exact numeric ID lookup first
+        var id = raw.replace(/^0+/, '') || raw;
+        if (/^[0-9]+$/.test(id)) {
+          TreeDB.hasTree(id).then(function (exists) {
+            if (exists) {
+              window.location.href = 'tree.html?id=' + encodeURIComponent(id);
+            } else {
+              input.classList.add('invalid');
+              resultsDiv.innerHTML = '<p class="no-results">No tree found with that ID.</p>';
+            }
+          }).catch(function () {
             input.classList.add('invalid');
-            return;
+          });
+          return;
+        }
+
+        // 2. Name / scientific name search using the full tree list
+        TreeDB.listTrees().then(function (trees) {
+          var query = raw.toLowerCase();
+          var matches = trees.filter(function (t) {
+            return (
+              t.tree_name.toLowerCase().includes(query) ||
+              (t.scientific_name && t.scientific_name.toLowerCase().includes(query))
+            );
+          });
+
+          if (matches.length === 0) {
+            input.classList.add('invalid');
+            resultsDiv.innerHTML = '<p class="no-results">No trees found. Try a different ID or name.</p>';
+          } else if (matches.length === 1) {
+            window.location.href = 'tree.html?id=' + encodeURIComponent(matches[0].tree_id);
+          } else {
+            var items = matches.map(function (t) {
+              var url = 'tree.html?id=' + encodeURIComponent(t.tree_id);
+              return (
+                '<li><a href="' + escapeHtml(url) + '">' +
+                '#' + escapeHtml(t.tree_id) + ' — ' + escapeHtml(t.tree_name) +
+                (t.scientific_name
+                  ? ' <span class="sci-name">(' + escapeHtml(t.scientific_name) + ')</span>'
+                  : '') +
+                '</a></li>'
+              );
+            }).join('');
+            resultsDiv.innerHTML =
+              '<p>' + matches.length + ' trees found:</p><ul>' + items + '</ul>';
           }
-          input.classList.remove('invalid');
-          window.location.href = 'tree.html?id=' + encodeURIComponent(id);
         }).catch(function () {
           input.classList.add('invalid');
+          resultsDiv.innerHTML = '<p class="no-results">Search failed. Please try again.</p>';
         });
       });
 
       input.addEventListener('input', function () {
         input.classList.remove('invalid');
+        resultsDiv.innerHTML = '';
       });
 
-      // Tree list table
+      // ── All-trees table ──────────────────────────────────────────────────
       var tbody = document.querySelector('#tree-list tbody');
 
       TreeDB.listTrees().then(function (trees) {
@@ -117,17 +159,14 @@
         }
         tbody.innerHTML = html;
 
-        // Make the whole row clickable. The tree-name cell already has a real
-        // <a> so middle-click / right-click "open in new tab" still works.
         tbody.addEventListener('click', function (e) {
-          if (e.target.closest('a')) return; // let the anchor handle its own click
+          if (e.target.closest('a')) return;
           var row = e.target.closest('tr.tree-row');
           if (row && row.dataset.href) {
             window.location.href = row.dataset.href;
           }
         });
 
-        // Keyboard support: Enter on a focused row navigates.
         tbody.addEventListener('keydown', function (e) {
           if (e.key !== 'Enter') return;
           var row = e.target.closest('tr.tree-row');
