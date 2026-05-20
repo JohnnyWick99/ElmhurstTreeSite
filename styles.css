@@ -321,3 +321,64 @@ table.info tr:last-child td {
   font-size: 0.9rem;
   color: var(--muted);
 }
+
+
+/* Search results list */
+#search-results {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 12px;
+  text-align: left;
+}
+
+#search-results p {
+  font-size: 0.9rem;
+  color: white;
+  margin: 0 0 8px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+#search-results ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+#search-results li {
+  border-bottom: 1px solid var(--border);
+}
+
+#search-results li:last-child {
+  border-bottom: none;
+}
+
+#search-results li a {
+  display: block;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: #1f2937;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+  background: white;
+}
+
+#search-results li a:hover {
+  background: #f9fafb;
+}
+
+#search-results li a .sci-name {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+.no-results {
+  color: white;
+  font-size: 0.9rem;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
